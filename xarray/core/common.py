@@ -1384,7 +1384,7 @@ class DataWithCoords(AttrAccessMixin):
             keep_attrs=keep_attrs,
         )
 
-    def isin(self, test_elements):
+    def isin(self, test_elements, tolerance: float = None):
         """Tests each value in the array for whether it is in test elements.
 
         Parameters
@@ -1393,7 +1393,9 @@ class DataWithCoords(AttrAccessMixin):
             The values against which to test each value of `element`.
             This argument is flattened if an array or array_like.
             See numpy notes for behavior with non-array-like parameters.
-
+        tolerance : float, optional
+            If a tolerance is provided, returns True if the
+            value is within the tolerance of a an element in test_elements.
         Returns
         -------
         isin : DataArray or Dataset
@@ -1427,12 +1429,24 @@ class DataWithCoords(AttrAccessMixin):
             # second argument
             test_elements = test_elements.data
 
-        return apply_ufunc(
-            duck_array_ops.isin,
-            self,
-            kwargs=dict(test_elements=test_elements),
-            dask="allowed",
-        )
+        if tolerance is None:
+            return apply_ufunc(
+                duck_array_ops.isin,
+                self,
+                kwargs=dict(test_elements=test_elements),
+                dask="allowed",
+            )
+
+        elif type(tolerance) == float or type(tolerance) == int:
+
+            bool_outer_product = (
+                np.abs(np.subtract.outer(self.values, test_elements)) <= tolerance
+            )
+            axis_n = len(bool_outer_product.shape) - 1
+            bool_array = (
+                np.abs(np.subtract.outer(self.values, test_elements)) <= tolerance
+            ).any(axis=axis_n)
+            return DataArray(bool_array, coords=self.coords, dims=self.dims)
 
     def astype(
         self: T,

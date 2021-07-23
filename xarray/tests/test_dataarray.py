@@ -6504,6 +6504,16 @@ def test_isin(da):
     result = da.isin([2, 3]).sel(y=list("de"), z=0)
     assert_equal(result, expected)
 
+    # TODO fix this test
+
+    expected = DataArray(
+        np.asarray([[0, 0, 1], [1, 1, 0]]),
+        dims=list("yx"),
+        coords={"x": list("abc"), "y": list("de")},
+    ).astype("bool")
+    result = da.isin([3], tolerance=1.5).sel(y=list("de"), z=0)
+    assert_equal(result, expected)
+
 
 @pytest.mark.parametrize("da", (1, 2), indirect=True)
 def test_rolling_iter(da):
