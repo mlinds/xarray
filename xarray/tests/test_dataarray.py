@@ -5758,8 +5758,6 @@ def test_isin(da):
     result = da.isin([2, 3]).sel(y=list("de"), z=0)
     assert_equal(result, expected)
 
-    # TODO fix this test
-
     expected = DataArray(
         np.asarray([[0, 0, 1], [1, 1, 0]]),
         dims=list("yx"),
